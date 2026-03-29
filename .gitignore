@@ -1,0 +1,41 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.pidb
+*.psess
+*.sln.docstates
+*.vs/
+.vs/
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+!packages/repositories.config
+
+# ASP.NET Core
+appsettings.Development.json
+appsettings.Production.json
+wwwroot/lib/
+wwwroot/dist/
+
+# Frontend (если используется Node.js)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
