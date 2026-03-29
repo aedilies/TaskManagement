@@ -13,7 +13,7 @@ public class TaskItem : IEntity
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public TaskStatus Status { get; set; } = TaskStatus.New;
+    public TaskItemStatus Status { get; set; } = TaskItemStatus.New;
     public TaskPriority Priority { get; set; } = TaskPriority.Medium;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? CompletedAt { get; set; }

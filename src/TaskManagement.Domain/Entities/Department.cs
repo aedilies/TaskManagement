@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TaskManagement.Domain.Common;
 
-namespace TaskManagement.Domain.Entites;
+namespace TaskManagement.Domain.Entities;
 
 public class Department : IEntity
 {
