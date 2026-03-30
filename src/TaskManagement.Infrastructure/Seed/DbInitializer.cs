@@ -71,9 +71,9 @@ public static class DbInitializer
 
             var users = new[]
             {
-                new User { Id = Guid.NewGuid(), FullName = "123", Email = "boss@example.com", DepartmentId = itDept.Id, RoleId = bossRoleObj.Id },
-                new User { Id = Guid.NewGuid(), FullName = "2", Email = "observer@example.com", DepartmentId = itDept.Id, RoleId = obsRole.Id },
-                new User { Id = Guid.NewGuid(), FullName = "44", Email = "employee@example.com", DepartmentId = hrDept.Id, RoleId = empRole.Id }
+                new User { Id = Guid.NewGuid(), FullName = "Начальник", Email = "boss@example.com", DepartmentId = itDept.Id, RoleId = bossRoleObj.Id },
+                new User { Id = Guid.NewGuid(), FullName = "Наблюдатель", Email = "observer@example.com", DepartmentId = itDept.Id, RoleId = obsRole.Id },
+                new User { Id = Guid.NewGuid(), FullName = "Сотрудник", Email = "employee@example.com", DepartmentId = hrDept.Id, RoleId = empRole.Id }
             };
             await context.Users.AddRangeAsync(users);
             await context.SaveChangesAsync();

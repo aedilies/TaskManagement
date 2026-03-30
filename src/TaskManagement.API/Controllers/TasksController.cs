@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TaskManagement.Application.DTOs.Task;
 using TaskManagement.Application.Interfaces;
-using System.Security.Claims;
 
 namespace TaskManagement.API.Controllers;
 
@@ -29,9 +29,7 @@ public class TasksController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateTaskDto dto)
     {
-        var currentUserId = Guid.Parse(
-    User.FindFirst(ClaimTypes.NameIdentifier)!.Value
-);
+        var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         var task = await _taskService.CreateTaskAsync(dto, currentUserId);
         return Ok(task);
     }
@@ -39,10 +37,11 @@ public class TasksController : ControllerBase
     [HttpPatch("status")]
     public async Task<IActionResult> UpdateStatus([FromBody] UpdateTaskStatusDto dto)
     {
-        var currentUserId = Guid.Parse(User.Claims.First(c => c.Type == "nameid").Value);
+        var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         await _taskService.UpdateStatusAsync(dto, currentUserId);
         return NoContent();
     }
+
     [HttpPatch]
     public async Task<IActionResult> Update([FromBody] UpdateTaskDto dto)
     {
@@ -62,9 +61,7 @@ public class TasksController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var currentUserId = Guid.Parse(
-    User.FindFirst(ClaimTypes.NameIdentifier)!.Value
-);
+        var currentUserId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         await _taskService.DeleteTaskAsync(id, currentUserId);
         return NoContent();
     }

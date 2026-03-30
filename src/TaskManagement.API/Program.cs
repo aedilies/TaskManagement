@@ -7,9 +7,20 @@ using TaskManagement.Application.Interfaces;
 using TaskManagement.Application.Services;
 using TaskManagement.Infrastructure.Data;
 using TaskManagement.Infrastructure.Repositories;
-using TaskManagement.Infrastructure.Seed; // достаточно одного раза
+using TaskManagement.Infrastructure.Seed; 
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5137", "https://localhost:7068", "http://localhost:5138") 
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
 
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -66,6 +77,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 

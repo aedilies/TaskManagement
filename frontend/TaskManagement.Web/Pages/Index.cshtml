@@ -1,10 +1,411 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Tasks";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Задачи</h2>
+        <div>
+            <span id="userInfo" class="me-3"></span>
+            <button id="logoutBtn" class="btn btn-outline-secondary btn-sm">Выйти</button>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label>Статус</label>
+                    <select id="filterStatus" class="form-select">
+                        <option value="">Все</option>
+                        <option value="0">New</option>
+                        <option value="1">InProgress</option>
+                        <option value="2">Done</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>Приоритет</label>
+                    <select id="filterPriority" class="form-select">
+                        <option value="">Все</option>
+                        <option value="0">Low</option>
+                        <option value="1">Medium</option>
+                        <option value="2">High</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>Отдел исполнителя</label>
+                    <select id="filterDepartment" class="form-select">
+                        <option value="">Все</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label>Сортировка</label>
+                    <select id="orderBy" class="form-select">
+                        <option value="false">По возрастанию даты</option>
+                        <option value="true">По убыванию даты</option>
+                    </select>
+                </div>
+                <div class="col-md-12">
+                    <button id="applyFiltersBtn" class="btn btn-primary">Применить</button>
+                    <button id="createTaskBtn" class="btn btn-success ms-2" style="display: none;">Создать задачу</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Описание</th>
+                    <th>Статус</th>
+                    <th>Приоритет</th>
+                    <th>Создана</th>
+                    <th>Создатель</th>
+                    <th>Исполнитель</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody id="tasksTableBody">
+                <tr><td colspan="8" class="text-center">Загрузка...</td></tr>
+            </tbody>
+        </table>
+    </div>
 </div>
+
+<div class="modal fade" id="createTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Создать задачу</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label>Название</label>
+                    <input type="text" id="taskTitle" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Описание</label>
+                    <textarea id="taskDescription" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label>Приоритет</label>
+                    <select id="taskPriority" class="form-select">
+                        <option value="0">Low</option>
+                        <option value="1" selected>Medium</option>
+                        <option value="2">High</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label>Исполнитель</label>
+                    <select id="taskAssignedTo" class="form-select"></select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" id="saveTaskBtn" class="btn btn-primary">Создать</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Изменить статус задачи</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <select id="newStatus" class="form-select">
+                    <option value="0">New</option>
+                    <option value="1">InProgress</option>
+                    <option value="2">Done</option>
+                </select>
+                <input type="hidden" id="statusTaskId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" id="updateStatusBtn" class="btn btn-primary">Изменить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="assignModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Назначить исполнителя</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <select id="assignUser" class="form-select"></select>
+                <input type="hidden" id="assignTaskId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" id="confirmAssignBtn" class="btn btn-primary">Назначить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentUserRole = '';
+        const apiBase = 'http://localhost:5137/api'; 
+
+        // Получение токена из localStorage
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        // Проверка авторизации
+        function checkAuth() {
+            const token = getToken();
+            if (!token) {
+                window.location.href = '/Login';
+                return false;
+            }
+            return true;
+        }
+
+        // Загрузка пользовательской информации
+        function loadUserInfo() {
+            const fullName = localStorage.getItem('fullName');
+            const role = localStorage.getItem('role');
+            currentUserRole = role;
+            document.getElementById('userInfo').innerText = `${fullName} (${role})`;
+            if (role === 'BOSS') {
+                document.getElementById('createTaskBtn').style.display = 'inline-block';
+            }
+        }
+
+        // Загрузка списка задач с фильтрами
+        async function loadTasks() {
+            const status = document.getElementById('filterStatus').value;
+            const priority = document.getElementById('filterPriority').value;
+            const departmentId = document.getElementById('filterDepartment').value;
+            const orderByDesc = document.getElementById('orderBy').value === 'true';
+
+            let url = `${apiBase}/tasks?`;
+            if (status) url += `status=${status}&`;
+            if (priority) url += `priority=${priority}&`;
+            if (departmentId) url += `departmentId=${departmentId}&`;
+            url += `orderByDesc=${orderByDesc}`;
+
+            const response = await fetch(url, {
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            if (!response.ok) throw new Error('Ошибка загрузки задач');
+            const tasks = await response.json();
+
+            const tbody = document.getElementById('tasksTableBody');
+            tbody.innerHTML = '';
+            for (const task of tasks) {
+                const row = tbody.insertRow();
+                row.insertCell(0).innerText = task.title;
+                row.insertCell(1).innerText = task.description || '';
+                row.insertCell(2).innerText = task.status;
+                row.insertCell(3).innerText = task.priority;
+                row.insertCell(4).innerText = new Date(task.createdAt).toLocaleString();
+                row.insertCell(5).innerText = task.createdBy;
+                row.insertCell(6).innerText = task.assignedTo;
+                const actionsCell = row.insertCell(7);
+
+                // Кнопка изменения статуса (доступна для всех, кроме OBSERVER)
+                if (currentUserRole !== 'OBSERVER') {
+                    const statusBtn = document.createElement('button');
+                    statusBtn.className = 'btn btn-sm btn-warning me-1';
+                    statusBtn.innerText = 'Статус';
+                    statusBtn.onclick = () => showStatusModal(task.id);
+                    actionsCell.appendChild(statusBtn);
+                }
+
+                // Кнопка назначения (только BOSS)
+                if (currentUserRole === 'BOSS') {
+                    const assignBtn = document.createElement('button');
+                    assignBtn.className = 'btn btn-sm btn-info me-1';
+                    assignBtn.innerText = 'Назначить';
+                    assignBtn.onclick = () => showAssignModal(task.id);
+                    actionsCell.appendChild(assignBtn);
+                }
+
+                // Кнопка удаления (BOSS или сотрудник, если задача его)
+                if (currentUserRole === 'BOSS' || (currentUserRole === 'EMPLOYEE' && task.assignedTo === localStorage.getItem('fullName'))) {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'btn btn-sm btn-danger';
+                    deleteBtn.innerText = 'Удалить';
+                    deleteBtn.onclick = () => deleteTask(task.id);
+                    actionsCell.appendChild(deleteBtn);
+                }
+            }
+        }
+
+        function showStatusModal(taskId) {
+            document.getElementById('statusTaskId').value = taskId;
+            const modal = new bootstrap.Modal(document.getElementById('statusModal'));
+            modal.show();
+        }
+
+        async function updateStatus() {
+            const taskId = document.getElementById('statusTaskId').value;
+            const newStatus = document.getElementById('newStatus').value;
+            try {
+                const response = await fetch(`${apiBase}/tasks/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: JSON.stringify({ taskId, status: parseInt(newStatus) })
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Статус ${response.status}: ${errorText}`);
+                }
+                bootstrap.Modal.getInstance(document.getElementById('statusModal')).hide();
+                loadTasks();
+            } catch (error) {
+                console.error('Ошибка изменения статуса:', error);
+                alert(`Ошибка: ${error.message}`);
+            }
+        }
+
+        async function showAssignModal(taskId) {
+            document.getElementById('assignTaskId').value = taskId;
+
+            // Загружаем список пользователей
+            const usersResponse = await fetch(`${apiBase}/users`, {
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            if (!usersResponse.ok) throw new Error('Не удалось загрузить пользователей');
+            const users = await usersResponse.json();
+            const select = document.getElementById('assignUser');
+            select.innerHTML = '';
+            users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.innerText = user.fullName;
+                select.appendChild(option);
+            });
+            const modal = new bootstrap.Modal(document.getElementById('assignModal'));
+            modal.show();
+        }
+
+        async function assignTask() {
+            const taskId = document.getElementById('assignTaskId').value;
+            const assignedToUserId = document.getElementById('assignUser').value;
+            try {
+                const response = await fetch(`${apiBase}/tasks/assign`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: JSON.stringify({ taskId, assignedToUserId })
+                });
+                if (!response.ok) throw new Error('Ошибка назначения');
+                bootstrap.Modal.getInstance(document.getElementById('assignModal')).hide();
+                loadTasks();
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        async function deleteTask(taskId) {
+            if (!confirm('Удалить задачу?')) return;
+            try {
+                const response = await fetch(`${apiBase}/tasks/${taskId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                if (!response.ok) throw new Error('Ошибка удаления');
+                loadTasks();
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        // Создание задачи
+        async function showCreateModal() {
+            // Загружаем пользователей для выбора исполнителя
+            const usersResponse = await fetch(`${apiBase}/users`, {
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            const users = await usersResponse.json();
+            const select = document.getElementById('taskAssignedTo');
+            select.innerHTML = '';
+            users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.innerText = user.fullName;
+                select.appendChild(option);
+            });
+            const modal = new bootstrap.Modal(document.getElementById('createTaskModal'));
+            modal.show();
+        }
+
+        async function createTask() {
+            const title = document.getElementById('taskTitle').value;
+            const description = document.getElementById('taskDescription').value;
+            const priority = document.getElementById('taskPriority').value;
+            const assignedToUserId = document.getElementById('taskAssignedTo').value;
+
+            try {
+                const response = await fetch(`${apiBase}/tasks`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: JSON.stringify({ title, description, priority: parseInt(priority), assignedToUserId })
+                });
+                if (!response.ok) throw new Error('Ошибка создания');
+                bootstrap.Modal.getInstance(document.getElementById('createTaskModal')).hide();
+                loadTasks();
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        // Загрузка отделов для фильтра
+        async function loadDepartments() {
+            const response = await fetch(`${apiBase}/departments`, {
+                headers: { 'Authorization': `Bearer ${getToken()}` }
+            });
+            const depts = await response.json();
+            const select = document.getElementById('filterDepartment');
+            depts.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept.id;
+                option.innerText = dept.name;
+                select.appendChild(option);
+            });
+        }
+
+        // Выход
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = '/Login';
+        });
+
+        document.getElementById('applyFiltersBtn').addEventListener('click', loadTasks);
+        document.getElementById('createTaskBtn').addEventListener('click', showCreateModal);
+        document.getElementById('updateStatusBtn').addEventListener('click', updateStatus);
+        document.getElementById('confirmAssignBtn').addEventListener('click', assignTask);
+        document.getElementById('saveTaskBtn').addEventListener('click', createTask);
+
+        // Инициализация
+        if (checkAuth()) {
+            loadUserInfo();
+            loadDepartments();
+            loadTasks();
+        }
+    </script>
+}

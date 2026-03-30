@@ -1,9 +1,9 @@
-﻿using TaskManagement.Application.DTOs.Task;
+﻿using Microsoft.EntityFrameworkCore;
+using TaskManagement.Application.DTOs.Task;
 using TaskManagement.Application.Interfaces;
 using TaskManagement.Domain.Entities;
 using TaskManagement.Domain.Enums;
 using TaskManagement.Infrastructure.Repositories;
-using Microsoft.EntityFrameworkCore;
 
 namespace TaskManagement.Application.Services;
 
@@ -20,7 +20,10 @@ public class TaskService : ITaskService
 
     public async Task<TaskDto> CreateTaskAsync(CreateTaskDto dto, Guid currentUserId)
     {
-        var currentUser = await _userRepository.GetByIdAsync(currentUserId);
+        // Загружаем текущего пользователя с ролью
+        var currentUser = await _userRepository.GetAllQueryable()
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Id == currentUserId);
         if (currentUser == null)
             throw new Exception("Current user not found");
 
@@ -95,7 +98,9 @@ public class TaskService : ITaskService
         var task = await _taskRepository.GetByIdAsync(dto.TaskId);
         if (task == null) throw new Exception("Task not found");
 
-        var currentUser = await _userRepository.GetByIdAsync(currentUserId);
+        var currentUser = await _userRepository.GetAllQueryable()
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Id == currentUserId);
         if (currentUser == null) throw new Exception("Current user not found");
 
         if (currentUser.Role?.Code == "OBSERVER")
@@ -116,7 +121,9 @@ public class TaskService : ITaskService
         var task = await _taskRepository.GetByIdAsync(dto.TaskId);
         if (task == null) throw new Exception("Task not found");
 
-        var currentUser = await _userRepository.GetByIdAsync(currentUserId);
+        var currentUser = await _userRepository.GetAllQueryable()
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Id == currentUserId);
         if (currentUser == null) throw new Exception("Current user not found");
 
         if (currentUser.Role?.Code == "OBSERVER")
@@ -140,7 +147,9 @@ public class TaskService : ITaskService
         var task = await _taskRepository.GetByIdAsync(dto.TaskId);
         if (task == null) throw new Exception("Task not found");
 
-        var currentUser = await _userRepository.GetByIdAsync(currentUserId);
+        var currentUser = await _userRepository.GetAllQueryable()
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Id == currentUserId);
         if (currentUser == null) throw new Exception("Current user not found");
 
         if (currentUser.Role?.Code != "BOSS")
@@ -161,7 +170,9 @@ public class TaskService : ITaskService
         var task = await _taskRepository.GetByIdAsync(taskId);
         if (task == null) throw new Exception("Task not found");
 
-        var currentUser = await _userRepository.GetByIdAsync(currentUserId);
+        var currentUser = await _userRepository.GetAllQueryable()
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Id == currentUserId);
         if (currentUser == null) throw new Exception("Current user not found");
 
         if (currentUser.Role?.Code == "OBSERVER")
