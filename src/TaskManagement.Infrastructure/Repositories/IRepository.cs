@@ -11,4 +11,6 @@ public interface IRepository<T> where T : class
     void Update(T entity);
     void Delete(T entity);
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
+
+    IQueryable<T> GetAllQueryable();
 }

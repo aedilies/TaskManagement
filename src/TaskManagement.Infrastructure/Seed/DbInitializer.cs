@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using TaskManagement.Domain.Entities;
-using TaskManagement.Domain.Enums;
 using TaskManagement.Infrastructure.Data;
 
 namespace TaskManagement.Infrastructure.Seed;
@@ -11,7 +10,6 @@ public static class DbInitializer
     {
         await context.Database.EnsureCreatedAsync();
 
-        // Роли
         if (!context.Roles.Any())
         {
             var roles = new[]
@@ -24,7 +22,6 @@ public static class DbInitializer
             await context.SaveChangesAsync();
         }
 
-        // Разрешения (примеры)
         if (!context.Permissions.Any())
         {
             var permissions = new[]
@@ -40,17 +37,18 @@ public static class DbInitializer
             await context.SaveChangesAsync();
         }
 
-        // Связи Role-Permission (пример для Начальника - все права)
-        var bossRole = await context.Roles.FirstOrDefaultAsync(r => r.Code == "BOSS");
+        var bossRole = await context.Roles.Include(r => r.Permissions).FirstOrDefaultAsync(r => r.Code == "BOSS");
         var allPermissions = await context.Permissions.ToListAsync();
-        if (bossRole != null && !bossRole.Permissions.Any())
+        if (bossRole != null)
         {
             foreach (var perm in allPermissions)
-                bossRole.Permissions.Add(perm);
+            {
+                if (!bossRole.Permissions.Any(p => p.Id == perm.Id))
+                    bossRole.Permissions.Add(perm);
+            }
             await context.SaveChangesAsync();
         }
 
-        // Отделы
         if (!context.Departments.Any())
         {
             var depts = new[]
@@ -63,7 +61,6 @@ public static class DbInitializer
             await context.SaveChangesAsync();
         }
 
-        // Пользователи
         if (!context.Users.Any())
         {
             var itDept = await context.Departments.FirstAsync(d => d.Name == "IT");
@@ -74,9 +71,9 @@ public static class DbInitializer
 
             var users = new[]
             {
-                new User { Id = Guid.NewGuid(), FullName = "Иван Иванов", Email = "ivan@example.com", DepartmentId = itDept.Id, RoleId = bossRoleObj.Id },
-                new User { Id = Guid.NewGuid(), FullName = "Петр Петров", Email = "petr@example.com", DepartmentId = itDept.Id, RoleId = empRole.Id },
-                new User { Id = Guid.NewGuid(), FullName = "Сидор Сидоров", Email = "sidor@example.com", DepartmentId = hrDept.Id, RoleId = obsRole.Id }
+                new User { Id = Guid.NewGuid(), FullName = "123", Email = "boss@example.com", DepartmentId = itDept.Id, RoleId = bossRoleObj.Id },
+                new User { Id = Guid.NewGuid(), FullName = "2", Email = "observer@example.com", DepartmentId = itDept.Id, RoleId = obsRole.Id },
+                new User { Id = Guid.NewGuid(), FullName = "44", Email = "employee@example.com", DepartmentId = hrDept.Id, RoleId = empRole.Id }
             };
             await context.Users.AddRangeAsync(users);
             await context.SaveChangesAsync();
