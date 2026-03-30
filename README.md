@@ -45,6 +45,7 @@ dotnet run
 Важно: В файлах Login.cshtml и Index.cshtml фронтенда прописан apiBase = 'http://localhost:5137/api'. Если API запустился на другом порту – изменить эту константу.
 
 Тестовые пользователи
+
 Роль: [ Наблюдатель, Сотрудник, Начальник ]
 Email: [ observer@example.com, employee@example.com, boss@example.com ]
 Пароль: [ 123, 123, 123 ]
