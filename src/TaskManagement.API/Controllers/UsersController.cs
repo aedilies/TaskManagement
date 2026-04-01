@@ -18,11 +18,13 @@ public class UsersController : ControllerBase
 
     // GET: api/users
     [HttpGet]
+    [HttpGet]
     public async Task<IActionResult> GetAll()
     {
         var users = await _context.Users
             .Include(u => u.Department)
             .Include(u => u.Role)
+            .Where(u => u.Role != null && u.Role.Code != "OBSERVER")
             .Select(u => new
             {
                 u.Id,

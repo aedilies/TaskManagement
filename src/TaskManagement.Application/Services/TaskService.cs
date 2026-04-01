@@ -22,17 +22,24 @@ public class TaskService : ITaskService
     {
         // Загружаем текущего пользователя с ролью
         var currentUser = await _userRepository.GetAllQueryable()
+        .Include(u => u.Role)
+        .FirstOrDefaultAsync(u => u.Id == currentUserId);
+        if (currentUser == null) 
+            throw new Exception("Пользователь не найден");
+        if (currentUser.Role == null) 
+            throw new Exception("У пользователя не назначена роль");
+        if (currentUser.Role.Code != "BOSS") 
+            throw new UnauthorizedAccessException("Только начальник может создавать задачи");
+
+        var assignedUser = await _userRepository.GetAllQueryable()
             .Include(u => u.Role)
-            .FirstOrDefaultAsync(u => u.Id == currentUserId);
-        if (currentUser == null)
-            throw new Exception("Current user not found");
-
-        if (currentUser.Role?.Code != "BOSS")
-            throw new UnauthorizedAccessException("Only BOSS can create tasks");
-
-        var assignedUser = await _userRepository.GetByIdAsync(dto.AssignedToUserId);
-        if (assignedUser == null)
-            throw new Exception("Assigned user not found");
+            .FirstOrDefaultAsync(u => u.Id == dto.AssignedToUserId);
+        if (assignedUser == null) 
+            throw new Exception("Исполнитель не найден");
+        if (assignedUser.Role == null) 
+            throw new Exception("У исполнителя не назначена роль");
+        if (assignedUser.Role.Code == "OBSERVER") 
+            throw new UnauthorizedAccessException("Нельзя назначить задачу наблюдателю");
 
         var task = new TaskItem
         {
@@ -96,18 +103,22 @@ public class TaskService : ITaskService
     public async Task UpdateStatusAsync(UpdateTaskStatusDto dto, Guid currentUserId)
     {
         var task = await _taskRepository.GetByIdAsync(dto.TaskId);
-        if (task == null) throw new Exception("Task not found");
+        if (task == null)
+            throw new Exception("Задача не найдена");
 
         var currentUser = await _userRepository.GetAllQueryable()
             .Include(u => u.Role)
             .FirstOrDefaultAsync(u => u.Id == currentUserId);
-        if (currentUser == null) throw new Exception("Current user not found");
+        if (currentUser == null)
+            throw new Exception("Пользователь не найден");
+        if (currentUser.Role == null)
+            throw new Exception("У пользователя не назначена роль");
 
-        if (currentUser.Role?.Code == "OBSERVER")
-            throw new UnauthorizedAccessException("Observer cannot modify tasks");
+        if (currentUser.Role.Code == "OBSERVER")
+            throw new UnauthorizedAccessException("Наблюдатель не может изменять задачи");
 
-        if (currentUser.Role?.Code == "EMPLOYEE" && task.AssignedToUserId != currentUserId)
-            throw new UnauthorizedAccessException("Employee can only modify own tasks");
+        if (currentUser.Role.Code == "EMPLOYEE" && task.AssignedToUserId != currentUserId)
+            throw new UnauthorizedAccessException("Вы можете изменять только задачи, назначенные вам");
 
         task.Status = (TaskItemStatus)dto.Status;
         task.UpdatedAt = DateTime.UtcNow;
@@ -119,18 +130,18 @@ public class TaskService : ITaskService
     public async Task UpdateTaskAsync(UpdateTaskDto dto, Guid currentUserId)
     {
         var task = await _taskRepository.GetByIdAsync(dto.TaskId);
-        if (task == null) throw new Exception("Task not found");
+        if (task == null) 
+            throw new Exception("Задача не найдена");
 
         var currentUser = await _userRepository.GetAllQueryable()
             .Include(u => u.Role)
             .FirstOrDefaultAsync(u => u.Id == currentUserId);
-        if (currentUser == null) throw new Exception("Current user not found");
-
+        if (currentUser == null) 
+            throw new Exception("Пользователь не найден");
         if (currentUser.Role?.Code == "OBSERVER")
-            throw new UnauthorizedAccessException("Observer cannot modify tasks");
-
+            throw new UnauthorizedAccessException("Наблюдатель не может изменять задачи");
         if (currentUser.Role?.Code == "EMPLOYEE" && task.AssignedToUserId != currentUserId)
-            throw new UnauthorizedAccessException("Employee can only edit own tasks");
+            throw new UnauthorizedAccessException("Вы можете изменять только задачи, назначенные вам");
 
         if (!string.IsNullOrEmpty(dto.Title)) task.Title = dto.Title;
         if (!string.IsNullOrEmpty(dto.Description)) task.Description = dto.Description;
@@ -145,18 +156,28 @@ public class TaskService : ITaskService
     public async Task AssignTaskAsync(AssignTaskDto dto, Guid currentUserId)
     {
         var task = await _taskRepository.GetByIdAsync(dto.TaskId);
-        if (task == null) throw new Exception("Task not found");
+        if (task == null)
+            throw new Exception("Задача не найдена");
 
         var currentUser = await _userRepository.GetAllQueryable()
             .Include(u => u.Role)
             .FirstOrDefaultAsync(u => u.Id == currentUserId);
-        if (currentUser == null) throw new Exception("Current user not found");
-
+        if (currentUser == null)
+            throw new Exception("Пользователь не найден");
+        if (currentUser.Role == null)
+            throw new Exception("У пользователя не назначена роль");
         if (currentUser.Role?.Code != "BOSS")
-            throw new UnauthorizedAccessException("Only BOSS can assign tasks");
+            throw new UnauthorizedAccessException("Только начальник может назначать исполнителя");
 
-        var assignedUser = await _userRepository.GetByIdAsync(dto.AssignedToUserId);
-        if (assignedUser == null) throw new Exception("Assigned user not found");
+        var assignedUser = await _userRepository.GetAllQueryable()
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.Id == dto.AssignedToUserId);
+        if (assignedUser == null)
+            throw new Exception("Исполнитель не найден");
+        if (assignedUser.Role == null)
+            throw new Exception("У исполнителя не назначена роль");
+        if (assignedUser.Role.Code == "OBSERVER")
+            throw new UnauthorizedAccessException("Нельзя назначить задачу наблюдателю");
 
         task.AssignedToUserId = dto.AssignedToUserId;
         task.UpdatedAt = DateTime.UtcNow;
@@ -168,18 +189,21 @@ public class TaskService : ITaskService
     public async Task DeleteTaskAsync(Guid taskId, Guid currentUserId)
     {
         var task = await _taskRepository.GetByIdAsync(taskId);
-        if (task == null) throw new Exception("Task not found");
+        if (task == null)
+            throw new Exception("Задача не найдена");
+
 
         var currentUser = await _userRepository.GetAllQueryable()
             .Include(u => u.Role)
             .FirstOrDefaultAsync(u => u.Id == currentUserId);
-        if (currentUser == null) throw new Exception("Current user not found");
-
+        if (currentUser == null)
+            throw new Exception("Пользователь не найден");
+        if (currentUser.Role == null)
+            throw new Exception("У пользователя не назначена роль");
         if (currentUser.Role?.Code == "OBSERVER")
-            throw new UnauthorizedAccessException("Observer cannot delete tasks");
-
+            throw new UnauthorizedAccessException("Наблюдатель не может удалять задачи");
         if (currentUser.Role?.Code == "EMPLOYEE" && task.AssignedToUserId != currentUserId)
-            throw new UnauthorizedAccessException("Employee can only delete own tasks");
+            throw new UnauthorizedAccessException("Вы можете удалять только свои задачи");
 
         _taskRepository.Delete(task);
         await _taskRepository.SaveChangesAsync();
